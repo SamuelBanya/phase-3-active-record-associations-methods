@@ -1,0 +1,93 @@
+These are the commands I used for this assignment:
+
+Related relationships for this lab:
+- An artist has many songs
+- An artist has many genres through songs.
+- A song belongs to a genre.
+- A song belongs to a artist.
+- A genre has many songs.
+- A genre has many artists through songs.
+
+The 'songs' table is the one we will use as the 'Join Table' in this scenario as it bridges the 'artists' and 'genres' tables together.
+
+Overall goals of the lab include:
+ask an Artist about its songs and genres
+ask a Song about its genre and its artist
+ask a Genre about its songs and artists
+
+- Ask an 'Artist' about its songs and genres (aka .songs and .genres)
+- As a 'Song' about its 'genre' and its 'artist' (aka .genre and .artist)
+
+I then ran the related migration via the 'bundle exec rake db:migrate' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-3/phase-3-active-record-associations-methods $ bundle exec rake db:migrate
+
+== 20210716172722 CreateArtists: migrating ====================================
+-- create_table(:artists)
+   -> 0.0007s
+== 20210716172722 CreateArtists: migrated (0.0008s) ===========================
+
+== 20210716172736 CreateGenres: migrating =====================================
+-- create_table(:genres)
+   -> 0.0009s
+== 20210716172736 CreateGenres: migrated (0.0009s) ============================
+
+== 20210716172742 CreateSongs: migrating ======================================
+-- create_table(:songs)
+   -> 0.0011s
+== 20210716172742 CreateSongs: migrated (0.0012s) =============================
+#+end_src
+
+I then seeded the database with the 'bundle exec rake db:seed' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-3/phase-3-active-record-associations-methods $ bundle exec rake db:seed
+#+end_src
+
+I then tried out a few of the methods with 'bundle exec rake console':
+#+begin_src ruby
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-3/phase-3-active-record-associations-methods $ bundle exec rake console
+
+[1] pry(main)> hello = Song.create(name: "Hello")
+
+D, [2022-09-03T11:42:08.364364 #6900] DEBUG -- :    (0.6ms)  SELECT sqlite_version(*)
+D, [2022-09-03T11:42:08.372957 #6900] DEBUG -- :   TRANSACTION (0.0ms)  begin transaction
+D, [2022-09-03T11:42:08.373889 #6900] DEBUG -- :   Song Create (0.8ms)  INSERT INTO "songs" ("name") VALUES (?)  [["name", "Hello"]]
+D, [2022-09-03T11:42:08.375624 #6900] DEBUG -- :   TRANSACTION (1.5ms)  commit transaction
+=> #<Song:0x00007f87afb9d7d0 id: 3, name: "Hello", artist_id: nil, genre_id: nil>
+
+[2] pry(main)> adele = Artist.create(name: "Adele")
+
+D, [2022-09-03T11:42:27.211999 #6900] DEBUG -- :   TRANSACTION (0.0ms)  begin transaction
+D, [2022-09-03T11:42:27.212736 #6900] DEBUG -- :   Artist Create (0.6ms)  INSERT INTO "artists" ("name") VALUES (?)  [["name", "Adele"]]
+D, [2022-09-03T11:42:27.214255 #6900] DEBUG -- :   TRANSACTION (1.3ms)  commit transaction
+=> #<Artist:0x00007f87ac27def0 id: 3, name: "Adele">
+
+[3] pry(main)> hello.artist = adele
+
+=> #<Artist:0x00007f87ac27def0 id: 3, name: "Adele">
+
+[4] pry(main)> hello.artist
+
+=> #<Artist:0x00007f87ac27def0 id: 3, name: "Adele">
+
+[5] pry(main)> hello.artist.name()
+
+=> "Adele"
+
+[6] pry(main)> rolling_in_the_deep = Song.create(name: "Rolling In The Deep")
+
+D, [2022-09-03T11:43:32.638560 #6900] DEBUG -- :   TRANSACTION (0.1ms)  begin transaction
+D, [2022-09-03T11:43:32.639375 #6900] DEBUG -- :   Song Create (0.6ms)  INSERT INTO "songs" ("name") VALUES (?)  [["name", "Rolling In The Deep"]]
+D, [2022-09-03T11:43:32.641082 #6900] DEBUG -- :   TRANSACTION (1.5ms)  commit transaction
+=> #<Song:0x00007f87b0851058 id: 4, name: "Rolling In The Deep", artist_id: nil, genre_id: nil>
+[7] pry(main)> adele.songs << rolling_in_the_deep
+D, [2022-09-03T11:43:44.166743 #6900] DEBUG -- :   TRANSACTION (0.1ms)  begin transaction
+D, [2022-09-03T11:43:44.167448 #6900] DEBUG -- :   Song Update (0.6ms)  UPDATE "songs" SET "artist_id" = ? WHERE "songs"."id" = ?  [["artist_id", 3], ["id", 4]]
+D, [2022-09-03T11:43:44.169365 #6900] DEBUG -- :   TRANSACTION (1.6ms)  commit transaction
+D, [2022-09-03T11:43:44.172487 #6900] DEBUG -- :   Song Load (0.3ms)  SELECT "songs".* FROM "songs" WHERE "songs"."artist_id" = ?  [["artist_id", 3]]
+=> [#<Song:0x00007f87b0851058 id: 4, name: "Rolling In The Deep", artist_id: 3, genre_id: nil>]
+
+[8] pry(main)> rolling_in_the_deep.artist()
+
+=> #<Artist:0x00007f87ac27def0 id: 3, name: "Adele">
+#+end_src
